@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<!-- You must include this JavaScript file -->
+<script src="https://assets.crowd.aws/crowd-html-elements.js"></script>
+
+<!-- For the full list of available Crowd HTML Elements and their input/output documentation,
+      please refer to https://docs.aws.amazon.com/sagemaker/latest/dg/sms-ui-template-reference.html -->
+
+<!-- You must include crowd-form so that your task submits answers to MTurk -->
+<crowd-form answer-format="flatten-objects">
+
+<p>
+      <strong>Instructions: </strong>
+      Is someone shoplifting in this video?
+</p>
+
+
+<!-- Your image file URLs will be substituted for the "image_url" variable below 
+      when you publish a batch with a CSV input file containing multiple image file URLs.
+      To preview the element with an example image, try setting the src attribute to
+      "https://s3.amazonaws.com/cv-demo-images/basketball-outdoor.jpg" -->
+<p><img src="https://i.imgur.com/lYlb3zr.gif" width="720px" height="540px"></p>
+
+
+<div class="radio"><label><input type="radio" name="ans" value="Yes" required="" />Yes, There is shoplifting going on</label></div><br>
+<div class="radio"><label><input type="radio" name="ans" value="No" required="" />No, There isn't shoplifting going on</label></div><br>
+
+</crowd-form>
+</html>
