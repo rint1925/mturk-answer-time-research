@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[9]:
+# In[1]:
 
 
 import sys
@@ -21,9 +21,6 @@ AWS_SECRET_ACCESS_KEY = s.key['AWS_SECRET_ACCESS_KEY']
 IS_SANDBOX = s.key['IS_SANDBOX']
 
 
-# In[10]:
-
-
 def get_client(id, key, is_sandbox):
 
     if is_sandbox:
@@ -39,8 +36,6 @@ def get_client(id, key, is_sandbox):
                             region_name = "us-east-1",
                             endpoint_url = "https://mturk-requester.us-east-1.amazonaws.com")
 
-
-# In[4]:
 
 
 def throw_a_hit(task_settings:dict):
@@ -60,7 +55,7 @@ def throw_a_hit(task_settings:dict):
 
     # hit creation
     ts = task_settings
-    with open("./Tasks"+ts['TASK_FILENAME']) as f:
+    with open("./Tasks/"+ts['TASK_FILENAME']) as f:
         res = client.create_hit(
             Title= ts['TASK_TITLE'],
             Description=ts['DESCRIPTION'],
@@ -83,7 +78,7 @@ def throw_a_hit(task_settings:dict):
 
 
     # check status of worker responses once every 10sec
-    columns = ['date', 'N_Pending','N_Available','N_Finished','N_Completed']
+    columns = ['date','seconds_passed','N_Pending','N_Available','N_Finished','N_Completed']
     data = pd.DataFrame(columns = columns)
 
     for i in range(s.record['STATUS_CHECK_NUM']):
@@ -94,16 +89,17 @@ def throw_a_hit(task_settings:dict):
         n_completed = res['HIT']['NumberOfAssignmentsCompleted']
         date = pd.to_datetime(res['ResponseMetadata']['HTTPHeaders']['date'])
         dict = {'date':date,
-                'seconds_passed':int(i*10),
+                'seconds_passed':int(i*s.record['STATUS_CHECK_INTERVAL']),
                 'N_Pending':n_pending,
                 'N_Available':n_available,
                 'N_Finished':n_finished,
                 'N_Completed':n_completed}
-        data = data.append(dict, ignore_index=True) 
+        record = pd.DataFrame(dict.values(), index=dict.keys()).T
+        data = pd.concat([data,record],ignore_index=True)
         print(' '+str(dict['seconds_passed'])+'s, '
               +'Pending: '+str(dict['N_Pending'])
               +', Finished: '+str(dict['N_Finished']))
-        time.sleep(10)
+        time.sleep(s.record['STATUS_CHECK_INTERVAL'])
 
     # Saving
     data.to_csv(output_path+'/transition_data.csv')
@@ -119,52 +115,24 @@ def throw_a_hit(task_settings:dict):
     return hit_id
 
 
-# In[12]:
-
-
-client = get_client(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, IS_SANDBOX)
-client.get_account_balance()['AvailableBalance']
-
-
-# In[10]:
+# In[2]:
 
 
 if __name__ == '__main__':
-    print("Start")
-    for i in range(6):
-        
-
-        while True:
-            if datetime.now().minute != 00:
-                time.sleep(58)
-                continue
-            
-            print(str(i+1)+"回目の依頼を開始")
-            print(datetime.now())
-            hit_id = throw_a_hit()
-            print(str(i+1)+"回目の依頼が完了")
-            break
-        
-        time.sleep(60)
-    print("プログラム終了")
+    client = get_client(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, IS_SANDBOX)
+    hit_id = throw_a_hit(s.task)
 
 
-# In[ ]:
+# In[18]:
 
 
+# # Stop the current HIT
+# if __name__ == '__main__':
+#     res = client.update_expiration_for_hit(HITId=hit_id, ExpireAt=datetime(1,1,1))
+#     print(res["ResponseMetadata"]["HTTPStatusCode"])
 
 
-
-# In[5]:
-
-
-# # HITの停止
-# hit_id = '3T2HW4QDV3VNPGKDBOYG8WB7WCC9C3'
-# res = client.update_expiration_for_hit(HITId=hit_id, ExpireAt=datetime(1,1,1)) # 現在より前
-# print(res["ResponseMetadata"]["HTTPStatusCode"])
-
-
-# In[7]:
+# In[19]:
 
 
 #-------------------run-only-in-ipynb-environment-------------------------------
