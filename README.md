@@ -1,4 +1,4 @@
-# mturk-answer-time-research
+# mturk-answering-time-research
 
 Amazon Mechanical Turkを用いた研究用コード
 
